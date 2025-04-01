@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, RefreshCw } from 'lucide-react';
-import CryptoJS from 'crypto-js';
+import { Lock, Unlock, RefreshCw, Eye } from 'lucide-react';
 import { encryptMessage } from './utils/encryption';
 
 type EncryptionCategory = {
@@ -54,6 +53,8 @@ function App() {
   const [encryptedText, setEncryptedText] = useState<string>("");
   const [userGuess, setUserGuess] = useState<string>("");
   const [similarity, setSimilarity] = useState<number>(0);
+  const [hasGuessed, setHasGuessed] = useState<boolean>(false);
+  const [showOriginal, setShowOriginal] = useState<boolean>(false);
 
   useEffect(() => {
     generateNewSentence();
@@ -66,10 +67,12 @@ function App() {
     encryptText(newSentence);
     setUserGuess("");
     setSimilarity(0);
+    setHasGuessed(false);
+    setShowOriginal(false);
   };
 
-  const encryptText = (text: string) => {
-    const encrypted = encryptMessage(text, selectedAlgorithm);
+  const encryptText = async (text: string) => {
+    const encrypted = await encryptMessage(text, selectedAlgorithm);
     setEncryptedText(encrypted);
   };
 
@@ -87,6 +90,7 @@ function App() {
     
     const similarity = (matches / words1.length) * 100;
     setSimilarity(Math.round(similarity));
+    setHasGuessed(true);
   };
 
   const handleCategoryChange = (category: string) => {
@@ -143,22 +147,24 @@ function App() {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-gray-700 p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium flex items-center">
-                  <Lock className="w-5 h-5 mr-2" />
-                  Original Text
-                </h3>
-                <button
-                  onClick={generateNewSentence}
-                  className="flex items-center bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Generate New
-                </button>
+            {(hasGuessed || showOriginal) && (
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium flex items-center">
+                    <Lock className="w-5 h-5 mr-2" />
+                    Original Text
+                  </h3>
+                  <button
+                    onClick={generateNewSentence}
+                    className="flex items-center bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Generate New
+                  </button>
+                </div>
+                <p className="text-gray-300 font-mono">{originalText}</p>
               </div>
-              <p className="text-gray-300 font-mono">{originalText}</p>
-            </div>
+            )}
 
             <div className="bg-gray-700 p-6 rounded-lg">
               <h3 className="text-lg font-medium mb-4 flex items-center">
@@ -169,10 +175,19 @@ function App() {
             </div>
 
             <div className="bg-gray-700 p-6 rounded-lg">
-              <h3 className="text-lg font-medium mb-4 flex items-center">
-                <Unlock className="w-5 h-5 mr-2" />
-                Try to Guess the Original Text
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium flex items-center">
+                  <Unlock className="w-5 h-5 mr-2" />
+                  Try to Guess the Original Text
+                </h3>
+                <button
+                  onClick={() => setShowOriginal(true)}
+                  className="flex items-center bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-md"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Reveal Original
+                </button>
+              </div>
               <input
                 type="text"
                 value={userGuess}
@@ -181,17 +196,19 @@ function App() {
                 className="w-full bg-gray-600 p-3 rounded-md text-white mb-4"
                 placeholder="Enter your guess here..."
               />
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">
-                  Similarity: {similarity}%
-                </span>
-                <div className="w-64 h-2 bg-gray-600 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300"
-                    style={{ width: `${similarity}%` }}
-                  ></div>
+              {hasGuessed && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">
+                    Similarity: {similarity}%
+                  </span>
+                  <div className="w-64 h-2 bg-gray-600 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 transition-all duration-300"
+                      style={{ width: `${similarity}%` }}
+                    ></div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
