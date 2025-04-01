@@ -49,7 +49,7 @@ An interactive web application demonstrating various encryption techniques commo
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/aka-Rakesh/UG-Research.git
 ```
 
 2. Install dependencies:
@@ -74,18 +74,6 @@ npm run dev
 - **elliptic**: Elliptic curve cryptography
 - **snarkjs**: Zero-knowledge proof implementations
 - **Lucide React**: Icon library
-
-## Project Structure
-
-```
-src/
-├── App.tsx           # Main application component
-├── main.tsx         # Application entry point
-├── utils/
-│   └── encryption.ts # Encryption implementations
-├── index.css        # Global styles
-└── vite-env.d.ts    # TypeScript declarations
-```
 
 ## Usage
 
