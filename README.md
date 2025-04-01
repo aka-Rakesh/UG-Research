@@ -2,8 +2,6 @@
 
 An interactive web application demonstrating various encryption techniques commonly used in Web3 and blockchain technology. Users can explore different encryption algorithms, see them in action, and test their understanding through an engaging guessing game.
 
-![Web3 Encryption Showcase](https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=1200)
-
 ## Features
 
 - **Interactive Encryption Demo**: Choose from multiple encryption categories and algorithms
