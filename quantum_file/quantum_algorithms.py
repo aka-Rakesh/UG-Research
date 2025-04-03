@@ -2,16 +2,16 @@
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 
-# For Grover's algorithm, use the available module
+
 from qiskit_algorithms.amplitude_amplifiers import Grover, AmplificationProblem
 
-# For phase estimation (component of Shor's algorithm)
+
 from qiskit_algorithms.phase_estimators import PhaseEstimation
 
-# Replace deprecated Sampler with StatevectorSampler as suggested in warning
+
 from qiskit.primitives import StatevectorSampler
 
-# Set up a simulator backend
+
 backend = AerSimulator()
 sampler = StatevectorSampler()
 
@@ -29,24 +29,15 @@ def custom_shors_algorithm(number_to_factor=15):
     """
     print(f"Demonstrating components of Shor's algorithm for factoring {number_to_factor}")
     
-    # In a real implementation, we would:
-    # 1. Choose random a where 1 < a < N and gcd(a, N) = 1
-    # 2. Find the period r of f(x) = a^x mod N using quantum phase estimation
-    # 3. Use r to find factors of N
-    
-    # For educational purposes, we'll create a simple quantum phase estimation circuit
-    # This is a core component of Shor's algorithm
-    
-    # Create a simple circuit to demonstrate phase estimation
     qc = QuantumCircuit(3, 2)
-    qc.h([0, 1])  # Prepare superposition on control qubits
-    qc.x(2)       # Prepare target qubit
+    qc.h([0, 1])  
+    qc.x(2)      
     
-    # Apply controlled-U operations (in Shor's, these would be controlled modular exponentiation)
+    
     qc.cp(np.pi/2, 0, 2)
     qc.cp(np.pi/4, 1, 2)
     
-    # Inverse QFT on control qubits
+   
     qc.h(0)
     qc.cp(-np.pi/2, 0, 1)
     qc.h(1)
@@ -79,18 +70,18 @@ def run_grovers(oracle_circuit, state_preparation=None):
     try:
         print("Running Grover's algorithm")
         
-        # Create an amplification problem
+        
         problem = AmplificationProblem(
             oracle=oracle_circuit,
             state_preparation=state_preparation,
-            is_good_state=None  # We'll determine good states from measurement
+            is_good_state=None  
         )
         
         # Create a Grover instance
         grover = Grover(sampler)
         
         # Run the algorithm with the correct API for your version
-        # Note: According to the error, 'num_iterations' is not a valid parameter
+       
         result = grover.amplify(problem)
         
         # Display results
@@ -145,17 +136,17 @@ def create_simple_oracle(marked_state='101'):
     n = len(marked_state)
     oracle = QuantumCircuit(n, name="oracle")
     
-    # Apply X gates to qubits that should be 0 in the marked state
+    
     for i in range(n):
         if marked_state[i] == '0':
             oracle.x(i)
     
-    # Multi-controlled Z gate
+    
     oracle.h(n-1)
     oracle.mcx(list(range(n-1)), n-1)
     oracle.h(n-1)
     
-    # Undo the X gates
+    
     for i in range(n):
         if marked_state[i] == '0':
             oracle.x(i)
@@ -178,22 +169,20 @@ def create_state_preparation(num_qubits):
         qc.h(i)
     return qc
 
-# Import numpy for phase calculations
+
 import numpy as np
 
-# Example usage:
+
 if __name__ == "__main__":
-    # Example 1: Demonstrate Shor's algorithm components
+    #  Demonstrate Shor's algorithm components
     circuit = custom_shors_algorithm(15)
     
     print("\n" + "-"*50 + "\n")
     
-    # Example 2: Run Grover's algorithm
+    #  Run Grover's algorithm
     marked_state = '101'
     oracle = create_simple_oracle(marked_state)
     init_state = create_state_preparation(len(marked_state))
     result = run_grovers(oracle, state_preparation=init_state)
     
-    # Print Qiskit version information for reference
-    import qiskit
-    print(f"\nQiskit version: {qiskit.__version__}")
+    
