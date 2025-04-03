@@ -1,19 +1,13 @@
 # Import the core Qiskit packages
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
-
-
 from qiskit_algorithms.amplitude_amplifiers import Grover, AmplificationProblem
-
-
 from qiskit_algorithms.phase_estimators import PhaseEstimation
-
-
-from qiskit.primitives import StatevectorSampler
-
+from qiskit.primitives import Sampler
+import numpy as np
 
 backend = AerSimulator()
-sampler = StatevectorSampler()
+sampler = Sampler()
 
 # Custom implementation of Shor's algorithm using phase estimation
 def custom_shors_algorithm(number_to_factor=15):
@@ -70,18 +64,16 @@ def run_grovers(oracle_circuit, state_preparation=None):
     try:
         print("Running Grover's algorithm")
         
-        
+        # Create the problem instance
         problem = AmplificationProblem(
             oracle=oracle_circuit,
-            state_preparation=state_preparation,
-            is_good_state=None  
+            state_preparation=state_preparation
         )
         
-        # Create a Grover instance
-        grover = Grover(sampler)
+        # Create a Grover instance with the sampler
+        grover = Grover(sampler=sampler)
         
-        # Run the algorithm with the correct API for your version
-       
+        # Run the algorithm
         result = grover.amplify(problem)
         
         # Display results
@@ -168,9 +160,6 @@ def create_state_preparation(num_qubits):
     for i in range(num_qubits):
         qc.h(i)
     return qc
-
-
-import numpy as np
 
 
 if __name__ == "__main__":
