@@ -16,9 +16,16 @@ export const encryptMessage = async (message: string, algorithm: string): Promis
     case 'RIPEMD-160':
       return CryptoJS.RIPEMD160(message).toString();
     
-    case 'AES':
-      const key = CryptoJS.lib.WordArray.random(32);
-      return CryptoJS.AES.encrypt(message, key).toString();
+    case 'AES': {
+      const key = CryptoJS.enc.Utf8.parse('YourSecretKey123'); // Using a fixed key for demonstration
+      const iv = CryptoJS.lib.WordArray.random(16);
+      const encrypted = CryptoJS.AES.encrypt(message, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      return encrypted.toString();
+    }
     
     case 'ECDSA': {
       // Generate a key pair
