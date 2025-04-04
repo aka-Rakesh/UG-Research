@@ -9,55 +9,37 @@ export interface QuantumAnalysisResult {
   vulnerabilityScore: number;  // 0-100
 }
 
-// Simulate quantum algorithm performance against different encryption methods
+// Run quantum analysis using actual quantum algorithms via API
 export const runQuantumAnalysis = async (message: string, algorithm: string): Promise<QuantumAnalysisResult> => {
   const encrypted = await encryptMessage(message, algorithm);
   
-  // Simplified analysis based on algorithm characteristics
-  switch (algorithm) {
-    case 'SHA-256':
-      return {
+  try {
+    const response = await fetch('/api/quantum/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         algorithm,
-        timeToBreak: 2 ** 128, // Grover's algorithm theoretical speedup
-        successRate: 85,
-        quantumAdvantage: 2,
-        vulnerabilityScore: 40
-      };
-    
-    case 'ECDSA':
-      return {
-        algorithm,
-        timeToBreak: 300, // Shor's algorithm theoretical break
-        successRate: 95,
-        quantumAdvantage: 1000000,
-        vulnerabilityScore: 90
-      };
-    
-    case 'RSA':
-      return {
-        algorithm,
-        timeToBreak: 200,
-        successRate: 98,
-        quantumAdvantage: 1000000,
-        vulnerabilityScore: 95
-      };
-    
-    case 'AES':
-      return {
-        algorithm,
-        timeToBreak: 2 ** 64, // Grover's algorithm theoretical speedup
-        successRate: 75,
-        quantumAdvantage: 2,
-        vulnerabilityScore: 30
-      };
-    
-    default:
-      return {
-        algorithm,
-        timeToBreak: 1000,
-        successRate: 50,
-        quantumAdvantage: 10,
-        vulnerabilityScore: 60
-      };
+        keySize: 256
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to run quantum analysis');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Quantum analysis error:', error);
+    // Fallback to theoretical values if API fails
+    return {
+      algorithm,
+      timeToBreak: algorithm === 'RSA' || algorithm === 'ECDSA' ? 300 : 2 ** 128,
+      successRate: algorithm === 'RSA' ? 95 : algorithm === 'ECDSA' ? 90 : 75,
+      quantumAdvantage: algorithm === 'RSA' || algorithm === 'ECDSA' ? 1000000 : 2,
+      vulnerabilityScore: algorithm === 'RSA' ? 95 : algorithm === 'ECDSA' ? 90 : algorithm === 'SHA-256' ? 40 : 30
+    };
   }
 };
