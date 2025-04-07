@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, RefreshCw } from 'lucide-react';
+import { Lock, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
 import { encryptMessage } from './utils/encryption';
 import { runQuantumAnalysis, QuantumAnalysisResult } from './utils/quantumAnalysis';
 import { QuantumAnalysisChart } from './components/QuantumAnalysisChart';
@@ -31,6 +31,7 @@ function App() {
   const [encryptedText, setEncryptedText] = useState<string>("");
   const [analysisResult, setAnalysisResult] = useState<QuantumAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     generateNewMessage();
@@ -44,6 +45,7 @@ function App() {
 
   const runAnalysis = async (text: string, algorithm: string) => {
     setIsAnalyzing(true);
+    setError(null);
     try {
       const encrypted = await encryptMessage(text, algorithm);
       setEncryptedText(encrypted);
@@ -52,8 +54,10 @@ function App() {
       setAnalysisResult(result);
     } catch (error) {
       console.error('Analysis failed:', error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setIsAnalyzing(false);
     }
-    setIsAnalyzing(false);
   };
 
   const handleCategoryChange = (category: string) => {
@@ -75,6 +79,16 @@ function App() {
           <h1 className="text-4xl font-bold mb-4">Quantum Security Analysis</h1>
           <p className="text-gray-300">Analyzing Web3 encryption against quantum algorithms</p>
         </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg mb-6">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              <h3 className="font-medium">Error</h3>
+            </div>
+            <p className="mt-2 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
           <div className="grid grid-cols-2 gap-4 mb-8">
@@ -142,7 +156,71 @@ function App() {
                 <p className="mt-4">Running quantum analysis...</p>
               </div>
             ) : analysisResult && (
-              <QuantumAnalysisChart result={analysisResult} />
+              <div className="space-y-6">
+                {/* Perfect Quantum Analysis */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4 flex items-center">
+                    <Shield className="w-5 h-5 mr-2 text-green-400" />
+                    Perfect Quantum Computer Analysis
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Success Rate</p>
+                      <p className="text-2xl font-bold text-green-400">{analysisResult.perfectQuantum.successRate.toFixed(2)}%</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Time to Break</p>
+                      <p className="text-2xl font-bold text-green-400">{analysisResult.perfectQuantum.timeToBreak}s</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Vulnerability Score</p>
+                      <p className="text-2xl font-bold text-green-400">{analysisResult.perfectQuantum.vulnerabilityScore}/100</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Quantum Analysis */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4 flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-yellow-400" />
+                    Current Quantum Computer Analysis
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Success Rate</p>
+                      <p className="text-2xl font-bold text-yellow-400">{analysisResult.currentQuantum.successRate.toFixed(2)}%</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Time to Break</p>
+                      <p className="text-2xl font-bold text-yellow-400">{analysisResult.currentQuantum.timeToBreak}s</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Vulnerability Score</p>
+                      <p className="text-2xl font-bold text-yellow-400">{analysisResult.currentQuantum.vulnerabilityScore}/100</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quantum Advantage */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4">Quantum Advantage</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Perfect Quantum</p>
+                      <p className="text-2xl font-bold text-green-400">{analysisResult.quantumAdvantage.perfect.toLocaleString()}x</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-400">Current Quantum</p>
+                      <p className="text-2xl font-bold text-yellow-400">{analysisResult.quantumAdvantage.current.toLocaleString()}x</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Note */}
+                <div className="bg-gray-700 p-4 rounded-lg text-sm text-gray-400">
+                  {analysisResult.note}
+                </div>
+              </div>
             )}
           </div>
         </div>

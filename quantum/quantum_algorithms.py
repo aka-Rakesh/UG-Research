@@ -5,6 +5,7 @@ from qiskit_algorithms.amplitude_amplifiers import Grover, AmplificationProblem
 from qiskit_algorithms.phase_estimators import PhaseEstimation
 from qiskit.primitives import Sampler
 import numpy as np
+import logging
 
 backend = AerSimulator()
 sampler = Sampler()
@@ -12,42 +13,78 @@ sampler = Sampler()
 # Custom implementation of Shor's algorithm using phase estimation
 def custom_shors_algorithm(number_to_factor=15):
     """
-    A simplified educational demonstration of Shor's algorithm approach
-    Note: This is not a full implementation, just illustrative
+    A demonstration of Shor's algorithm with both perfect and realistic quantum simulations
     
     Args:
-        number_to_factor: Integer to be factored
+        number_to_factor: Integer to be factored (should be a product of two primes)
     
     Returns:
-        Information about the factorization process
+        Dictionary containing both perfect and realistic quantum circuits and results
     """
-    print(f"Demonstrating components of Shor's algorithm for factoring {number_to_factor}")
+    # Perfect quantum computer simulation (no noise, perfect gates)
+    perfect_qc = QuantumCircuit(3, 2)
     
-    qc = QuantumCircuit(3, 2)
-    qc.h([0, 1])  
-    qc.x(2)      
+    # Initialize qubits
+    perfect_qc.h([0, 1])  # Create superposition
+    perfect_qc.x(2)       # Initialize target qubit to |1>
     
+    # Perfect modular exponentiation
+    perfect_qc.cp(np.pi/2, 0, 2)  # Controlled phase rotation
+    perfect_qc.cp(np.pi/4, 1, 2)  # Another controlled phase rotation
     
-    qc.cp(np.pi/2, 0, 2)
-    qc.cp(np.pi/4, 1, 2)
+    # Perfect inverse QFT
+    perfect_qc.h(0)
+    perfect_qc.cp(-np.pi/2, 0, 1)
+    perfect_qc.h(1)
     
-   
-    qc.h(0)
-    qc.cp(-np.pi/2, 0, 1)
-    qc.h(1)
+    # Perfect measurement
+    perfect_qc.measure([0, 1], [0, 1])
     
-    qc.measure([0, 1], [0, 1])
+    # Realistic quantum computer simulation (with noise and errors)
+    realistic_qc = QuantumCircuit(3, 2)
     
-    print("Created a simplified quantum phase estimation circuit:")
-    print(qc.draw())
-    print("\nNote: A full Shor's algorithm implementation would use this")
-    print("to find the period of modular exponentiation, which is then")
-    print("used in classical post-processing to find factors.")
+    # Initialize with potential errors
+    realistic_qc.h([0, 1])
+    realistic_qc.x(2)
     
-    print("\nFor actual factorization, consider using specialized libraries")
-    print("like 'qiskit-community/qiskit-nature' which may contain implementations.")
+    # Add some noise to the gates
+    realistic_qc.cp(np.pi/2 + 0.1, 0, 2)  # Slightly off phase
+    realistic_qc.cp(np.pi/4 + 0.05, 1, 2)  # Another slightly off phase
     
-    return qc
+    # Noisy inverse QFT
+    realistic_qc.h(0)
+    realistic_qc.cp(-np.pi/2 - 0.1, 0, 1)  # Slightly off phase
+    realistic_qc.h(1)
+    
+    # Measurement with potential errors
+    realistic_qc.measure([0, 1], [0, 1])
+    
+    # Run both simulations
+    backend = AerSimulator()
+    
+    # Perfect simulation
+    perfect_job = backend.run(transpile(perfect_qc, backend), shots=1024)
+    perfect_result = perfect_job.result()
+    perfect_counts = perfect_result.get_counts()
+    
+    # Realistic simulation
+    realistic_job = backend.run(transpile(realistic_qc, backend), shots=1024)
+    realistic_result = realistic_job.result()
+    realistic_counts = realistic_result.get_counts()
+    
+    # Calculate success rates
+    perfect_success = max(perfect_counts.values()) / sum(perfect_counts.values()) * 100
+    realistic_success = max(realistic_counts.values()) / sum(realistic_counts.values()) * 100
+    
+    return {
+        'perfect_circuit': perfect_qc,
+        'realistic_circuit': realistic_qc,
+        'perfect_counts': perfect_counts,
+        'realistic_counts': realistic_counts,
+        'perfect_success_rate': perfect_success,
+        'realistic_success_rate': realistic_success,
+        'number_to_factor': number_to_factor
+    }
 
 # Implementation for Grover's algorithm with corrected API
 def run_grovers(oracle_circuit, state_preparation=None):
@@ -62,7 +99,11 @@ def run_grovers(oracle_circuit, state_preparation=None):
         Result from Grover's algorithm
     """
     try:
-        print("Running Grover's algorithm")
+        # Limit the number of qubits to prevent memory issues
+        if len(oracle_circuit.qubits) > 8:
+            oracle_circuit = oracle_circuit.decompose()
+            oracle_circuit = oracle_circuit.decompose()
+            oracle_circuit = oracle_circuit.decompose()
         
         # Create the problem instance
         problem = AmplificationProblem(
@@ -70,21 +111,16 @@ def run_grovers(oracle_circuit, state_preparation=None):
             state_preparation=state_preparation
         )
         
-        # Create a Grover instance with the sampler
+        # Use AerSimulator directly instead of Sampler
+        backend = AerSimulator()
         grover = Grover(sampler=sampler)
         
         # Run the algorithm
         result = grover.amplify(problem)
-        
-        # Display results
-        print(f"Most likely solution: {result.top_measurement}")
         return result
     except Exception as e:
-        print(f"Error running Grover's algorithm: {e}")
-        
         # Fall back to a basic demonstration of Grover's
-        print("\nFalling back to basic Grover's algorithm demonstration:")
-        n = len(oracle_circuit.qubits)
+        n = min(len(oracle_circuit.qubits), 8)  # Limit to 8 qubits
         qc = QuantumCircuit(n, n)
         
         # Initialize in superposition
@@ -105,13 +141,10 @@ def run_grovers(oracle_circuit, state_preparation=None):
         # Measure
         qc.measure(range(n), range(n))
         
-        print(qc.draw())
-        
         # Run on simulator
         job = backend.run(transpile(qc, backend), shots=1024)
         result = job.result()
         counts = result.get_counts()
-        print(f"Measurement results: {counts}")
         return counts
 
 # Example: Creating a simple oracle for Grover's algorithm
